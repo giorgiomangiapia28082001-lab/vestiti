@@ -58,6 +58,13 @@ function LoginForm() {
           options: { data: { display_name: name.trim() }, emailRedirectTo: `${window.location.origin}/` },
         });
         if (error) throw error;
+        // Con un'email già registrata Supabase non crea nulla e restituisce un
+        // utente senza identità: in quel caso l'utente deve solo accedere.
+        if (data.user && data.user.identities?.length === 0) {
+          setMode("login");
+          setError("Esiste già un account con questa email (ad esempio quello dell'app Garage): accedi con la stessa password.");
+          return;
+        }
         if (!data.session) setSent(true);
       }
     } catch (err) {
