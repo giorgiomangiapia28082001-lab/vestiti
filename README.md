@@ -58,9 +58,12 @@ tests/                    Test del motore (Vitest)
   dell'utente, feedback (valutazioni e preferiti), frequenza d'uso e novità; selezione finale con diversità
   (MMR). Funziona anche senza AI e serve da rete di sicurezza.
 - **AI come servizio separato** (`src/server/ai`): l'interfaccia `AIProvider` espone `analyzeGarment` e
-  `composeOutfits`. Il provider incluso usa Claude tramite l'SDK ufficiale con **output strutturati** (JSON
-  validato con Zod). Per cambiare modello basta `AI_MODEL`; per cambiare fornitore si implementa
-  l'interfaccia e la si registra in `src/server/ai/index.ts`.
+  `composeOutfits`, con due provider e prompt condivisi (`providers/prompts.ts`):
+  - **Google Gemini** (predefinito, come nelle app Garage): API REST, sceglie da solo un modello "flash"
+    disponibile e passa al successivo se uno è sovraccarico; la risposta JSON viene normalizzata e validata
+    con Zod.
+  - **Claude** (alternativa): SDK ufficiale con output strutturati.
+  Per cambiare fornitore si implementa l'interfaccia e la si registra in `src/server/ai/index.ts`.
 - **Mai capi inventati**: il modello riceve solo i capi ammessi con i loro identificativi; ogni proposta
   viene validata (`validateItemIds`) contro i capi reali dell'utente letti dal database e contro regole di
   struttura. Le proposte non valide sono scartate e sostituite da quelle del motore.
@@ -94,9 +97,10 @@ Copia `.env.example` in `.env.local` e compila i valori:
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | sì | URL del progetto Supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | sì | Chiave pubblicabile (accettata anche `NEXT_PUBLIC_SUPABASE_ANON_KEY`) |
-| `ANTHROPIC_API_KEY` | no | Attiva riconoscimento foto e stylist AI. Solo server. |
-| `AI_PROVIDER` | no | `anthropic` (predefinito) oppure `none` per disattivare l'AI |
-| `AI_MODEL` | no | Modello Claude, predefinito `claude-opus-5-5` |
+| `GEMINI_API_KEY` | no | Attiva riconoscimento foto e stylist AI con Google Gemini. Solo server. |
+| `ANTHROPIC_API_KEY` | no | Alternativa: Claude. Usata se manca la chiave Gemini o con `AI_PROVIDER=anthropic`. |
+| `AI_PROVIDER` | no | `gemini`, `anthropic` oppure `none`; se vuoto si sceglie in base alle chiavi presenti |
+| `AI_MODEL` | no | Modello specifico; con Gemini viene scelto in automatico, con Claude è `claude-opus-5-5` |
 | `AI_DAILY_LIMIT` | no | Chiamate AI per utente ogni 24 ore, predefinito 60 |
 
 ### 3. Avvio

@@ -151,7 +151,7 @@ function SettingsInner() {
                 <p className="text-[12.5px] text-muted">
                   {ai?.enabled
                     ? "Riconoscimento delle foto e outfit generati con l'intelligenza artificiale."
-                    : "Funzionano comunque il motore di stile e l'estrazione dei colori. Per attivarlo serve ANTHROPIC_API_KEY sul server."}
+                    : "Funzionano comunque il motore di stile e l'estrazione dei colori. Per attivarlo serve GEMINI_API_KEY sul server (Vercel)."}
                 </p>
               </div>
             </div>
