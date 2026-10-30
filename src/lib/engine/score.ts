@@ -269,5 +269,5 @@ export function scoreOutfit(
 
 /** Converte il punteggio grezzo in una percentuale leggibile. */
 export function scoreToPercent(score: number) {
-  return Math.round(Math.max(0, Math.min(1, (score - 0.3) / 0.65)) * 100);
+  return Math.round(Math.max(0, Math.min(1, (score - 0.3) / 0.82)) * 100);
 }

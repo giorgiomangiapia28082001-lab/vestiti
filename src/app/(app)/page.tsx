@@ -261,7 +261,7 @@ function SectionTitle({ eyebrow, title, href, linkLabel = "Vedi tutti" }: { eyeb
 
 function Rail({ children }: { children: React.ReactNode }) {
   return (
-    <div className="no-scrollbar -mx-4 flex snap-x gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+    <div className="no-scrollbar -mx-4 flex snap-x scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-3 sm:overflow-visible sm:px-0 lg:grid-cols-4">
       {children}
     </div>
   );
@@ -276,8 +276,8 @@ function Onboarding() {
   return (
     <section className="animate-fade-up overflow-hidden rounded-[32px] border border-line bg-surface shadow-soft">
       <div className="grid gap-0 lg:grid-cols-[1fr_1.1fr]">
-        <div className="relative min-h-56 bg-surface-2">
-          <div className="absolute inset-6 grid grid-cols-3 grid-rows-2 gap-2.5" aria-hidden>
+        <div className="relative h-52 bg-surface-2 lg:h-auto">
+          <div className="absolute inset-5 grid grid-cols-3 grid-rows-2 gap-2.5" aria-hidden>
             {["#d6c3a1", "#1f2a44", "#efe6d2", "#5f6236", "#3b3b3d", "#b08a5a"].map((c, i) => (
               <div key={c} className="animate-fade-up rounded-[18px]" style={{ background: c, animationDelay: `${i * 70}ms` }} />
             ))}

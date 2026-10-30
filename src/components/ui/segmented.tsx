@@ -23,7 +23,7 @@ export function Segmented<T extends string>({
           aria-selected={value === o.value}
           onClick={() => onChange(o.value)}
           className={cn(
-            "h-9 shrink-0 grow rounded-full px-4 text-[13px] font-semibold transition-all duration-200",
+            "h-9 min-w-fit flex-1 whitespace-nowrap rounded-full px-3 text-[12.5px] font-semibold transition-all duration-200 sm:px-4 sm:text-[13px]",
             value === o.value ? "bg-surface text-ink shadow-soft" : "text-muted hover:text-ink",
           )}
         >

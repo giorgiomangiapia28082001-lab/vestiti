@@ -158,3 +158,30 @@ describe("rankAlternatives", () => {
     for (const a of alts) expect(a.item.slot).toBe("shoes");
   });
 });
+
+describe("acceptAiOutfits", () => {
+  it("scarta capi inventati, strutture non valide e duplicati", async () => {
+    const { acceptAiOutfits } = await import("@/lib/engine/accept-ai");
+    const { buildAffinity } = await import("@/lib/engine/score");
+    const req = generateRequestSchema.parse({ occasion: "work", season: "autumn" });
+    const shirt = wardrobe.find((i) => i.category === "shirt")!;
+    const chino = wardrobe.find((i) => i.name === "Chino beige")!;
+    const loafers = wardrobe.find((i) => i.name === "Mocassini marroni")!;
+    const base = { name: "Prova", description: "d", color_story: "c", tips: ["t"] };
+    const result = acceptAiOutfits(
+      {
+        outfits: [
+          { ...base, item_ids: [shirt.id, chino.id, loafers.id] },
+          { ...base, item_ids: [loafers.id, chino.id, shirt.id] }, // duplicato
+          { ...base, item_ids: [shirt.id, "giacca-inventata", chino.id] },
+          { ...base, item_ids: [shirt.id, loafers.id] }, // manca la parte inferiore
+        ],
+        missing: [],
+      },
+      { allowed: byId, byId, ctx: { request: req }, affinity: buildAffinity() },
+    );
+    expect(result).toHaveLength(1);
+    expect(result[0].source).toBe("ai");
+    expect(result[0].pieces.map((p) => p.item_id).sort()).toEqual([shirt.id, chino.id, loafers.id].sort());
+  });
+});

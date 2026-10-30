@@ -3,8 +3,6 @@
 -- soltanto le proprie righe. I vincoli CHECK rispecchiano gli schemi Zod
 -- in src/lib/schemas.ts.
 
-create extension if not exists "pgcrypto";
-
 -- ---------------------------------------------------------------------------
 -- Profili utente e preferenze di stile
 -- ---------------------------------------------------------------------------
@@ -140,7 +138,7 @@ create index ai_usage_user_idx on public.ai_usage (user_id, created_at desc);
 -- ---------------------------------------------------------------------------
 -- Trigger
 -- ---------------------------------------------------------------------------
-create or replace function public.touch_updated_at()
+create or replace function public.wardrobe_touch_updated_at()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -152,14 +150,14 @@ end;
 $$;
 
 create trigger profiles_touch before update on public.profiles
-  for each row execute function public.touch_updated_at();
+  for each row execute function public.wardrobe_touch_updated_at();
 create trigger clothing_items_touch before update on public.clothing_items
-  for each row execute function public.touch_updated_at();
+  for each row execute function public.wardrobe_touch_updated_at();
 create trigger outfits_touch before update on public.outfits
-  for each row execute function public.touch_updated_at();
+  for each row execute function public.wardrobe_touch_updated_at();
 
 -- Crea il profilo alla registrazione.
-create or replace function public.handle_new_user()
+create or replace function public.wardrobe_handle_new_user()
 returns trigger
 language plpgsql
 security definer
@@ -172,13 +170,16 @@ begin
 end;
 $$;
 
-create trigger on_auth_user_created
+-- Usata solo dal trigger: non deve essere richiamabile via API.
+revoke execute on function public.wardrobe_handle_new_user() from public, anon, authenticated;
+
+create trigger wardrobe_on_auth_user_created
   after insert on auth.users
-  for each row execute function public.handle_new_user();
+  for each row execute function public.wardrobe_handle_new_user();
 
 -- Quando un outfit viene indossato, aggiorna contatore e data di ultimo
 -- utilizzo dei capi. Gira con i permessi dell'utente (RLS attiva).
-create or replace function public.apply_outfit_worn()
+create or replace function public.wardrobe_apply_outfit_worn()
 returns trigger
 language plpgsql
 set search_path = ''
@@ -195,7 +196,7 @@ $$;
 
 create trigger outfit_history_apply_worn
   after insert on public.outfit_history
-  for each row execute function public.apply_outfit_worn();
+  for each row execute function public.wardrobe_apply_outfit_worn();
 
 -- ---------------------------------------------------------------------------
 -- Row Level Security

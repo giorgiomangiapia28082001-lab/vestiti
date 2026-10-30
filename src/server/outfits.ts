@@ -2,12 +2,12 @@ import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { label } from "@/lib/domain";
 import {
+  acceptAiOutfits,
   buildAffinity,
+  comboKey,
   explainOutfit,
   generateCandidates,
-  scoreOutfit,
   targetFormality,
-  validateItemIds,
   type EngineItem,
   type FeedbackOutfit,
   type UserTaste,
@@ -97,7 +97,7 @@ export async function generateOutfits(
   const ctx = { request: req, taste, feedback };
   const byId = new Map(items.map((i) => [i.id, i]));
   const affinity = buildAffinity(feedback, req.avoid_combos);
-  const avoided = new Set(req.avoid_combos.map((ids) => [...ids].sort().join("|")));
+  const avoided = new Set(req.avoid_combos.map(comboKey));
   const pool = generateCandidates(items, { ...ctx, request: { ...req, count: Math.max(req.count * 2, 8) } });
   const notices = [...pool.notices];
 
@@ -154,28 +154,7 @@ export async function generateOutfits(
           avoid: req.avoid_combos,
           suggestions: pool.candidates.slice(0, 6).map((c) => c.pieces.map((p) => p.item_id)),
         });
-        const seen = new Set<string>();
-        response.outfits.forEach((o, i) => {
-          const check = validateItemIds(o.item_ids, allowed, req.include_item_ids.filter((id) => allowed.has(id)));
-          if (!check.ok) return;
-          const key = check.pieces.map((p) => p.item_id).sort().join("|");
-          if (seen.has(key) || avoided.has(key)) return;
-          seen.add(key);
-          const { score } = scoreOutfit(check.pieces, byId, ctx, affinity);
-          results.push({
-            key: `a-${req.seed}-${i}`,
-            name: o.name.slice(0, 80),
-            description: o.description.slice(0, 1000),
-            color_story: o.color_story.slice(0, 600),
-            tips: o.tips.slice(0, 3).map((t) => t.slice(0, 240)),
-            occasion: req.occasion,
-            style: req.style ?? req.custom_style,
-            season: req.season,
-            pieces: check.pieces,
-            score,
-            source: "ai",
-          });
-        });
+        results = acceptAiOutfits(response, { allowed, byId, ctx, affinity });
         for (const m of response.missing.slice(0, 3)) notices.push(m);
         ai = { used: results.length > 0, reason: results.length ? undefined : "invalid_output" };
       } catch (error) {
@@ -187,10 +166,10 @@ export async function generateOutfits(
   }
 
   // Completa con le proposte del motore a regole, evitando duplicati.
-  const taken = new Set(results.map((r) => r.pieces.map((p) => p.item_id).sort().join("|")));
+  const taken = new Set(results.map((r) => comboKey(r.pieces.map((p) => p.item_id))));
   for (const [i, c] of pool.candidates.entries()) {
     if (results.length >= req.count) break;
-    const key = c.pieces.map((p) => p.item_id).sort().join("|");
+    const key = comboKey(c.pieces.map((p) => p.item_id));
     if (taken.has(key) || avoided.has(key)) continue;
     taken.add(key);
     results.push(fromRules(c.pieces, c.score, i));
